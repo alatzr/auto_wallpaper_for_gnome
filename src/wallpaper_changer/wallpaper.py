@@ -174,6 +174,8 @@ def compose_multi_monitor_wallpaper(
         canvas.paste(img, (x_offset, y_offset))
         img.close()
 
-    output_path = '/tmp/wallpaper_changer_composed.png'
+    cache_dir = Path.home() / '.cache' / 'wallpaper-changer'
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    output_path = str(cache_dir / 'composed_wallpaper.png')
     canvas.save(output_path, 'PNG')
     return output_path
