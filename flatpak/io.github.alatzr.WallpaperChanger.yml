@@ -1,6 +1,6 @@
 app-id: io.github.alatzr.WallpaperChanger
 runtime: org.gnome.Platform
-runtime-version: '47'
+runtime-version: '48'
 sdk: org.gnome.Sdk
 command: wallpaper-changer-gui
 
@@ -18,11 +18,14 @@ finish-args:
 modules:
   - name: wallpaper-changer
     buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
     build-commands:
-      - pip3 install --no-build-isolation --prefix=/app .
+      - pip3 install --prefix=/app .
       - install -Dm644 data/io.github.alatzr.WallpaperChanger.desktop /app/share/applications/io.github.alatzr.WallpaperChanger.desktop
       - install -Dm644 data/io.github.alatzr.WallpaperChanger.metainfo.xml /app/share/metainfo/io.github.alatzr.WallpaperChanger.metainfo.xml
       - install -Dm644 data/io.github.alatzr.WallpaperChanger.svg /app/share/icons/hicolor/scalable/apps/io.github.alatzr.WallpaperChanger.svg
     sources:
       - type: dir
-        path: .
+        path: ..
