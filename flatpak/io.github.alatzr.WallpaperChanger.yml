@@ -14,6 +14,10 @@ finish-args:
   - --own-name=org.kde.StatusNotifierItem
   - --filesystem=xdg-pictures
   - --filesystem=home
+  - --filesystem=xdg-run/dconf
+  - --filesystem=xdg-config/dconf:ro
+  - --talk-name=ca.desrt.dconf
+  - --env=DCONF_USER_CONFIG_DIR=.config/dconf
 
 modules:
   - name: wallpaper-changer

@@ -6,6 +6,40 @@ from PIL import Image
 from PIL.ImageOps import fit as image_fit
 
 
+def _is_flatpak() -> bool:
+    """Check if running inside a Flatpak sandbox."""
+    return Path('/.flatpak-info').exists()
+
+
+def _gsettings_set(schema: str, key: str, value: str) -> None:
+    """Run gsettings set, using flatpak-spawn --host if in Flatpak."""
+    if _is_flatpak():
+        subprocess.run(
+            ['flatpak-spawn', '--host', 'gsettings', 'set', schema, key, value],
+            check=True, capture_output=True
+        )
+    else:
+        subprocess.run(
+            ['gsettings', 'set', schema, key, value],
+            check=True, capture_output=True
+        )
+
+
+def _gsettings_get(schema: str, key: str) -> str:
+    """Run gsettings get, using flatpak-spawn --host if in Flatpak."""
+    if _is_flatpak():
+        result = subprocess.run(
+            ['flatpak-spawn', '--host', 'gsettings', 'get', schema, key],
+            check=True, capture_output=True, text=True
+        )
+    else:
+        result = subprocess.run(
+            ['gsettings', 'get', schema, key],
+            check=True, capture_output=True, text=True
+        )
+    return result.stdout.strip()
+
+
 def set_wallpaper(image_path: str, option: str = 'scaled') -> bool:
     """Set wallpaper for GNOME desktop.
 
@@ -30,23 +64,9 @@ def set_wallpaper(image_path: str, option: str = 'scaled') -> bool:
 
         file_uri = path_to_uri(str(abs_path))
 
-        subprocess.run(
-            ['gsettings', 'set', 'org.gnome.desktop.background', 'picture-uri', file_uri],
-            check=True,
-            capture_output=True
-        )
-
-        subprocess.run(
-            ['gsettings', 'set', 'org.gnome.desktop.background', 'picture-uri-dark', file_uri],
-            check=True,
-            capture_output=True
-        )
-
-        subprocess.run(
-            ['gsettings', 'set', 'org.gnome.desktop.background', 'picture-options', option],
-            check=True,
-            capture_output=True
-        )
+        _gsettings_set('org.gnome.desktop.background', 'picture-uri', file_uri)
+        _gsettings_set('org.gnome.desktop.background', 'picture-uri-dark', file_uri)
+        _gsettings_set('org.gnome.desktop.background', 'picture-options', option)
 
         return True
 
@@ -62,14 +82,8 @@ def get_wallpaper() -> str:
         Path to current wallpaper image, or empty string if not set
     """
     try:
-        result = subprocess.run(
-            ['gsettings', 'get', 'org.gnome.desktop.background', 'picture-uri'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        uri = result.stdout.strip().strip("'")
-        return uri_to_path(uri)
+        uri = _gsettings_get('org.gnome.desktop.background', 'picture-uri')
+        return uri_to_path(uri.strip("'"))
     except subprocess.CalledProcessError:
         return ""
 
