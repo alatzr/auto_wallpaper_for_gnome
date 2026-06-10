@@ -18,7 +18,6 @@ class WallpaperScheduler:
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
-        self._interval_changed = threading.Event()
 
     @property
     def interval(self) -> int:
@@ -27,17 +26,12 @@ class WallpaperScheduler:
     @interval.setter
     def interval(self, value: int) -> None:
         self._interval = value
-        # Signal the running loop to re-read interval
-        if self._running:
-            self._interval_changed.set()
-            self._stop_event.set()
 
     def start(self):
         """Start the scheduler in background thread."""
         if self._running:
             return
         self._stop_event.clear()
-        self._interval_changed.clear()
         self._running = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
@@ -46,11 +40,11 @@ class WallpaperScheduler:
         """Stop the scheduler."""
         if not self._running:
             return
+        self._running = False
         self._stop_event.set()
         if self._thread is not None:
-            self._thread.join(timeout=self._interval + 1)
+            self._thread.join(timeout=2)
             self._thread = None
-        self._running = False
 
     def run_forever(self):
         """Run in foreground (blocking). Handles SIGINT/SIGTERM for graceful shutdown."""
@@ -73,18 +67,16 @@ class WallpaperScheduler:
 
     def _run_loop(self):
         """Internal loop that calls callback at interval."""
-        while not self._stop_event.is_set():
+        while self._running:
             try:
                 self.callback()
             except Exception:
                 pass
-            # Wait for interval, but wake up early if stopped or interval changed
-            self._stop_event.wait(timeout=self._interval)
-            # If interval changed, clear the event and continue with new interval
-            if self._interval_changed.is_set():
-                self._interval_changed.clear()
-                if not self._stop_event.is_set():
-                    self._stop_event.clear()
+            # Sleep in small increments so we can respond to stop/interval changes
+            elapsed = 0
+            while self._running and elapsed < self._interval:
+                time.sleep(0.5)
+                elapsed += 0.5
 
     def is_running(self) -> bool:
         """Check if scheduler is running."""
