@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3584e4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a5fb4;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#26a269;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a7d4a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff7800;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e55900;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)"/>
+  <!-- Monitor 1 (landscape) -->
+  <rect x="28" y="55" width="120" height="80" rx="6" fill="#ffffff" opacity="0.95"/>
+  <rect x="33" y="60" width="110" height="65" rx="3" fill="#363636"/>
+  <!-- Monitor 1 content - sunset scene -->
+  <rect x="33" y="60" width="110" height="65" rx="3" fill="#2190c9"/>
+  <circle cx="65" cy="80" r="12" fill="#f9f06b"/>
+  <path d="M33 100 L55 85 L77 95 L99 78 L121 90 L143 82 L143 125 L33 125 Z" fill="url(#mountain1)"/>
+  <!-- Monitor 2 (portrait) -->
+  <rect x="108" y="95" width="120" height="80" rx="6" fill="#ffffff" opacity="0.95"/>
+  <rect x="113" y="100" width="110" height="65" rx="3" fill="#363636"/>
+  <!-- Monitor 2 content - city scene -->
+  <rect x="113" y="100" width="110" height="65" rx="3" fill="#e66100"/>
+  <circle cx="170" cy="115" r="10" fill="#f9f06b"/>
+  <rect x="120" y="120" width="12" height="45" fill="#ffffff" opacity="0.7"/>
+  <rect x="136" y="130" width="12" height="35" fill="#ffffff" opacity="0.7"/>
+  <rect x="152" y="115" width="12" height="50" fill="#ffffff" opacity="0.7"/>
+  <rect x="168" y="125" width="12" height="40" fill="#ffffff" opacity="0.7"/>
+  <rect x="184" y="118" width="12" height="47" fill="#ffffff" opacity="0.7"/>
+  <rect x="200" y="128" width="16" height="37" fill="#ffffff" opacity="0.7"/>
+  <path d="M113 145 L135 135 L155 140 L175 130 L195 138 L215 132 L223 135 L223 165 L113 165 Z" fill="url(#mountain2)" opacity="0.6"/>
+  <!-- Sync arrows -->
+  <path d="M108 75 L118 70 L118 73 L128 73 L128 77 L118 77 L118 80 Z" fill="#ffffff" opacity="0.9"/>
+  <path d="M148 75 L138 70 L138 73 L128 73 L128 77 L138 77 L138 80 Z" fill="#ffffff" opacity="0.9"/>
+</svg>

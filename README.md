@@ -1,30 +1,48 @@
 # Wallpaper Changer
 
-Automatic wallpaper rotation for **Fedora 43 (GNOME Wayland)** with multi-monitor support. Each monitor can display a different wallpaper sourced from its own folder, composited into a single image and applied via GNOME's native `gsettings`.
+Automatic wallpaper rotation for **Fedora (GNOME Wayland)** with multi-monitor support. Each monitor can display a different wallpaper sourced from its own folder, composited into a single image and applied via GNOME's native `gsettings`.
 
 ## Features
 
 - **Multi-monitor support** — assign independent source folders per monitor; images are composited into a single wallpaper
 - **Automatic rotation** — configurable interval (default: 300s / 5 min)
 - **Random selection** — avoids recently shown wallpapers
-- **Systemd integration** — install as a user service for automatic startup
+- **GUI** — GTK4 + libadwaita with system tray integration
 - **CLI interface** — 9 subcommands for full control
+- **Systemd integration** — install as a user service for automatic startup
 - **Native GNOME** — uses `gsettings`, works on Wayland and X11
+- **i18n** — English and Chinese interface
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.11+
-- Fedora 43 with GNOME (Wayland or X11)
-- `Pillow` (image processing)
-
-### Install from source
+### Flatpak (Recommended)
 
 ```bash
-git clone <repo-url> wallpaper_changer
-cd wallpaper_changer
+# Build
+flatpak-builder --user --install --force-clean build flatpak/io.github.alatzr.WallpaperChanger.yml
+
+# Run
+flatpak run io.github.alatzr.WallpaperChanger
+```
+
+### From source
+
+```bash
+git clone https://github.com/alatzr/auto_wallpaper_for_gnome.git
+cd auto_wallpaper_for_gnome
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install
 pip install -e .
+
+# Run GUI
+wallpaper-changer-gui
+
+# Or CLI
+wallpaper-changer --help
 ```
 
 ### Install systemd service
@@ -36,6 +54,17 @@ systemctl --user start wallpaper-changer
 ```
 
 ## Usage
+
+### GUI
+
+```bash
+wallpaper-changer-gui
+```
+
+- **Preview tab** — view current wallpaper, switch to next/random
+- **Sources tab** — configure source folder for each monitor
+- **Timer tab** — set rotation interval, start/stop
+- **Settings tab** — wallpaper scaling, language, minimize to tray
 
 ### CLI Commands
 
@@ -53,14 +82,6 @@ systemctl --user start wallpaper-changer
 | `wallpaper-changer install` | Install systemd user service |
 | `wallpaper-changer uninstall` | Remove systemd user service |
 
-### Global Options
-
-| Option | Description |
-|--------|-------------|
-| `--config <path>` | Use a custom config file |
-| `--interval <seconds>` | Override rotation interval |
-| `--option <mode>` | Wallpaper scaling: `scaled`, `stretched`, `zoom`, `centered`, `wallpaper`, `none` |
-
 ### Examples
 
 ```bash
@@ -75,16 +96,11 @@ systemctl --user start wallpaper-changer
 
 # Set a specific wallpaper
 wallpaper-changer set ~/Pictures/wallpaper.jpg
-
-# Override interval to 10 minutes
-wallpaper-changer --interval 600 start
 ```
 
 ## Configuration
 
 Config file location: `~/.config/wallpaper-changer/config.toml`
-
-Create a default config with:
 
 ```bash
 wallpaper-changer config --init
@@ -95,7 +111,7 @@ wallpaper-changer config --init
 ```toml
 [general]
 interval = 300          # seconds between rotation
-option = "scaled"       # scaled | stretched | zoom | centered | wallpaper | none
+option = "scaled"       # scaled | stretched | zoom | centered | wallpaper | none | spanned
 
 [[monitors]]
 name = "DP-1"
@@ -106,75 +122,36 @@ name = "HDMI-1"
 source_folder = "/home/user/Pictures/monitors/HDMI-1"
 ```
 
-Each `[[monitors]]` entry maps a monitor connector name to a wallpaper source folder. Use `wallpaper-changer monitors` to find your monitor names.
+Use `wallpaper-changer monitors` to find your monitor names.
 
 ## How It Works
 
 ### Monitor Detection
 
-The tool tries detection methods in order:
-
 1. **GNOME Mutter D-Bus** (Wayland) — queries `org.gnome.Mutter.DisplayConfig`
 2. **wlr-randr** (wlroots compositors)
 3. **xrandr** (X11)
 
-Each monitor's name, resolution, and position are detected.
+Detects name, resolution, position, rotation, and scaling factor.
 
 ### Multi-Monitor Composition
 
-GNOME does not natively support per-monitor wallpapers. Wallpaper Changer works around this:
+GNOME does not natively support per-monitor wallpapers. Wallpaper Changer:
 
 1. Picks a random image from each monitor's source folder
-2. Resizes each image to match its monitor's resolution
-3. Composites them onto a single canvas using Pillow, positioned according to each monitor's layout
-4. Sets the composed image as the desktop background via `gsettings`
+2. Composites them onto a single canvas using Pillow, positioned according to each monitor's logical layout
+3. Sets the composed image via `gsettings` with `picture-options spanned`
+
+GNOME's `spanned` mode maps the image proportionally across all monitors.
 
 ### GNOME Integration
 
-Wallpaper is applied using:
-
-```
+```bash
 gsettings set org.gnome.desktop.background picture-uri file:///path/to/image
 gsettings set org.gnome.desktop.background picture-uri-dark file:///path/to/image
-gsettings set org.gnome.desktop.background picture-options scaled
+gsettings set org.gnome.desktop.background picture-options spanned
 ```
-
-## Development
-
-### Project Structure
-
-```
-wallpaper_changer/
-├── src/wallpaper_changer/
-│   ├── __init__.py
-│   ├── cli.py          # CLI interface (argparse)
-│   ├── config.py       # TOML configuration management
-│   ├── monitor.py      # Monitor detection (D-Bus/xrandr)
-│   ├── wallpaper.py    # Wallpaper setting & image composition
-│   ├── source.py       # Wallpaper source folder management
-│   ├── scheduler.py    # Rotation timer
-│   └── systemd.py      # Systemd service management
-├── tests/              # Test suite
-├── config/             # Example configurations
-├── MEMORY.md           # Project memory / decisions
-└── TASK.md             # Task tracking
-```
-
-### Running Tests
-
-```bash
-pip install -e ".[test]"
-pytest
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass: `pytest`
-5. Submit a pull request
 
 ## License
 
-MIT License
+GPL-3.0-or-later

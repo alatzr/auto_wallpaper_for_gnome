@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.alatzr.WallpaperChanger</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Wallpaper Changer</name>
+  <name xml:lang="zh_CN">壁纸更换器</name>
+  <summary>Set different wallpapers for each monitor on GNOME</summary>
+  <summary xml:lang="zh_CN">为每个显示器设置不同的壁纸</summary>
+  <description>
+    <p>
+      Wallpaper Changer lets you set a different wallpaper for each monitor on
+      GNOME desktops. It composes images into a single spanned wallpaper and
+      supports automatic rotation with configurable intervals.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Multi-monitor support with per-monitor wallpaper source folders</li>
+      <li>Automatic wallpaper rotation with configurable timer</li>
+      <li>GTK4 + libadwaita GUI with system tray integration</li>
+      <li>CLI interface for scripting</li>
+      <li>Systemd service for autostart</li>
+      <li>English and Chinese interface</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.alatzr.WallpaperChanger.desktop</launchable>
+  <url type="homepage">https://github.com/alatzr/auto_wallpaper_for_gnome</url>
+  <developer id="io.github.alatzr">
+    <name>alatzr</name>
+  </developer>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-06-10">
+      <description>
+        <p>Initial release with multi-monitor wallpaper support.</p>
+      </description>
+    </release>
+  </releases>
+</component>

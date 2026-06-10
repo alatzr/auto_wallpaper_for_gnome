@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Wallpaper Changer
+Name[zh_CN]=壁纸更换器
+Comment=Set different wallpapers for each monitor on GNOME
+Comment[zh_CN]=为每个显示器设置不同的壁纸
+Exec=wallpaper-changer-gui
+Icon=io.github.alatzr.WallpaperChanger
+Terminal=false
+Type=Application
+Categories=Utility;GTK;
+Keywords=wallpaper;background;monitor;display;multi;
+Keywords[zh_CN]=壁纸;背景;显示器;多屏;
+StartupWMClass=wallpaper-changer
