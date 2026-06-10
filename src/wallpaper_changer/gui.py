@@ -800,6 +800,7 @@ class TimerTab(Gtk.Box):
         row = Adw.ActionRow(title=t("label_change_every"))
         self.spin = Gtk.SpinButton.new_with_range(10, 86400, 10)
         self.spin.set_value(self.main_win.config.interval)
+        self.spin.connect("value-changed", self._on_interval_changed)
         row.add_suffix(self.spin)
         group.add(row)
 
@@ -845,6 +846,13 @@ class TimerTab(Gtk.Box):
         self.svc_switch.connect("state-set", self._on_service_toggle)
         svc_row.add_suffix(self.svc_switch)
         group3.add(svc_row)
+
+    def _on_interval_changed(self, spin: Gtk.SpinButton) -> None:
+        """Update scheduler interval when spin value changes."""
+        interval = int(spin.get_value())
+        self.main_win.config.interval = interval
+        if self.main_win.scheduler.is_running():
+            self.main_win.scheduler.interval = interval
 
     def _on_preset(self, _btn: Gtk.Button, secs: int) -> None:
         self.spin.set_value(secs)

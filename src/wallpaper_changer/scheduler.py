@@ -14,16 +14,30 @@ class WallpaperScheduler:
             interval: Seconds between changes
         """
         self.callback = callback
-        self.interval = interval
+        self._interval = interval
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        self._interval_changed = threading.Event()
+
+    @property
+    def interval(self) -> int:
+        return self._interval
+
+    @interval.setter
+    def interval(self, value: int) -> None:
+        self._interval = value
+        # Signal the running loop to re-read interval
+        if self._running:
+            self._interval_changed.set()
+            self._stop_event.set()
 
     def start(self):
         """Start the scheduler in background thread."""
         if self._running:
             return
         self._stop_event.clear()
+        self._interval_changed.clear()
         self._running = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
@@ -34,7 +48,7 @@ class WallpaperScheduler:
             return
         self._stop_event.set()
         if self._thread is not None:
-            self._thread.join(timeout=self.interval + 1)
+            self._thread.join(timeout=self._interval + 1)
             self._thread = None
         self._running = False
 
@@ -64,7 +78,13 @@ class WallpaperScheduler:
                 self.callback()
             except Exception:
                 pass
-            self._stop_event.wait(timeout=self.interval)
+            # Wait for interval, but wake up early if stopped or interval changed
+            self._stop_event.wait(timeout=self._interval)
+            # If interval changed, clear the event and continue with new interval
+            if self._interval_changed.is_set():
+                self._interval_changed.clear()
+                if not self._stop_event.is_set():
+                    self._stop_event.clear()
 
     def is_running(self) -> bool:
         """Check if scheduler is running."""
