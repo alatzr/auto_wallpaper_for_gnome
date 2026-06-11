@@ -39,24 +39,31 @@ class MainWindow:
 
         self.root = tk.Tk()
         self.root.title(t("app_title"))
-        self.root.geometry("750x550")
-        self.root.minsize(600, 400)
 
-        # Fix DPI scaling - set larger default font
-        default_font = tk.font.nametofont("TkDefaultFont")
-        default_font.configure(size=12)
+        # Detect display scaling factor for Wayland
+        self.scale = self._detect_scale()
+        w = int(750 * self.scale)
+        h = int(550 * self.scale)
+        self.root.geometry(f"{w}x{h}")
+        self.root.minsize(int(600 * self.scale), int(400 * self.scale))
+
+        # Apply scaling to Tkinter
+        base_font_size = int(11 * self.scale)
+        self.root.tk.call('tk', 'scaling', self.scale * 1.0)
+
+        default_font = tkfont.nametofont("TkDefaultFont")
+        default_font.configure(size=base_font_size)
         self.root.option_add("*Font", default_font)
 
-        # Configure ttk styles for larger text
         style = ttk.Style()
-        style.configure(".", font=("", 12))
-        style.configure("TButton", font=("", 12), padding=6)
-        style.configure("TLabel", font=("", 12))
-        style.configure("TNotebook.Tab", font=("", 12), padding=[10, 4])
-        style.configure("TLabelframe.Label", font=("", 12, "bold"))
-        style.configure("TCombobox", font=("", 12))
-        style.configure("TSpinbox", font=("", 12))
-        style.configure("TEntry", font=("", 12))
+        style.configure(".", font=("", base_font_size))
+        style.configure("TButton", font=("", base_font_size), padding=int(6 * self.scale))
+        style.configure("TLabel", font=("", base_font_size))
+        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[int(10 * self.scale), int(4 * self.scale)])
+        style.configure("TLabelframe.Label", font=("", base_font_size, "bold"))
+        style.configure("TCombobox", font=("", base_font_size))
+        style.configure("TSpinbox", font=("", base_font_size))
+        style.configure("TEntry", font=("", base_font_size))
 
         self._build_ui()
         self._refresh_monitors()
@@ -310,6 +317,16 @@ class MainWindow:
         self.status_var.set(t("status_running") if self.scheduler.is_running() else t("status_stopped"))
 
     # ---- helpers ----------------------------------------------------------
+
+    def _detect_scale(self) -> float:
+        """Detect display scaling factor from monitors."""
+        try:
+            monitors = get_monitors()
+            if monitors:
+                return monitors[0].scaling
+        except Exception:
+            pass
+        return 1.0
 
     def _refresh_monitors(self) -> None:
         try:
