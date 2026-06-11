@@ -1,7 +1,7 @@
 app-id: io.github.alatzr.WallpaperChanger
-runtime: org.gnome.Platform
-runtime-version: '47'
-sdk: org.gnome.Sdk
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
 command: wallpaper-changer-gui
 
 finish-args:
@@ -10,8 +10,6 @@ finish-args:
   - --socket=wayland
   - --socket=session-bus
   - --talk-name=org.gnome.Mutter.DisplayConfig
-  - --talk-name=org.kde.StatusNotifierWatcher
-  - --own-name=org.kde.StatusNotifierItem
   - --filesystem=xdg-pictures
   - --filesystem=home
   - --filesystem=xdg-run/dconf
