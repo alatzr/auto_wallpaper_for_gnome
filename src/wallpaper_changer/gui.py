@@ -65,6 +65,14 @@ class MainWindow:
         y = max(0, (sh - h) // 2)
         self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.root.minsize(750, 520)
+
+        # Ensure window is visible on Wayland
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+        self.root.attributes('-topmost', True)
+        self.root.update()
+        self.root.attributes('-topmost', False)
         self.root.deiconify()
         self.root.lift()
         self.root.focus_force()
@@ -76,6 +84,9 @@ class MainWindow:
         self._refresh_monitors()
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+
+        # Final focus after UI is built
+        self.root.after(100, self._ensure_visible)
 
     # ── Font & style setup ──────────────────────────────────────────────────
 
@@ -444,6 +455,13 @@ class MainWindow:
 
     # ── Helpers ─────────────────────────────────────────────────────────────
 
+    def _ensure_visible(self) -> None:
+        """Ensure window is visible and focused (Wayland fix)."""
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+        self.root.update_idletasks()
+
     def _refresh_monitors(self) -> None:
         try:
             self.monitors = get_monitors()
@@ -560,9 +578,15 @@ class MainWindow:
 
 
 def main() -> int:
-    app = MainWindow()
-    app.run()
-    return 0
+    try:
+        app = MainWindow()
+        app.run()
+        return 0
+    except Exception as e:
+        import traceback
+        with open('/tmp/wallpaper-changer-error.log', 'w') as f:
+            traceback.print_exc(file=f)
+        raise
 
 
 if __name__ == "__main__":

@@ -44,10 +44,18 @@ chmod +x "$BIN_DIR/wallpaper-changer"
 echo "Installing desktop entry..."
 cp data/io.github.alatzr.WallpaperChanger.desktop "$DESKTOP_DIR/"
 sed -i "s|Exec=wallpaper-changer-gui|Exec=$BIN_DIR/wallpaper-changer-gui|" "$DESKTOP_DIR/io.github.alatzr.WallpaperChanger.desktop"
-sed -i "s|Icon=io.github.alatzr.WallpaperChanger|Icon=$ICON_DIR/io.github.alatzr.WallpaperChanger.svg|" "$DESKTOP_DIR/io.github.alatzr.WallpaperChanger.desktop"
+# Keep Icon as theme name (not full path) - icon cache will resolve it
 
 # Install icon
 cp data/io.github.alatzr.WallpaperChanger.svg "$ICON_DIR/"
+
+# Copy system hicolor index if needed for icon cache
+if [ ! -f "$HOME/.local/share/icons/hicolor/index.theme" ] && [ -f "/usr/share/icons/hicolor/index.theme" ]; then
+    cp /usr/share/icons/hicolor/index.theme "$HOME/.local/share/icons/hicolor/"
+fi
+
+# Update icon cache BEFORE desktop database
+gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 
 # Create systemd service
 echo "Creating systemd service..."
