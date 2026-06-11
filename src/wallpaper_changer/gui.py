@@ -55,8 +55,20 @@ class MainWindow:
         self.root = tk.Tk()
         self.root.title(t("app_title"))
         self.root.configure(bg=COLORS["bg"])
-        self.root.geometry("900x650")
+
+        # Force window to be visible and centered
+        self.root.update_idletasks()
+        w, h = 900, 650
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        x = max(0, (sw - w) // 2)
+        y = max(0, (sh - h) // 2)
+        self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.root.minsize(750, 520)
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+        self.root.update()
 
         self._setup_fonts()
         self._setup_styles()
