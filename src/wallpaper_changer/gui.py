@@ -40,17 +40,16 @@ class MainWindow:
         self.root = tk.Tk()
         self.root.title(t("app_title"))
 
-        # Detect display scaling factor for Wayland
-        self.scale = self._detect_scale()
-        w = int(800 * self.scale)
-        h = int(600 * self.scale)
+        # Force X11 backend for better Tkinter compatibility
+        import os
+        os.environ.pop('WAYLAND_DISPLAY', None)
+
+        w, h = 900, 650
         self.root.geometry(f"{w}x{h}")
-        self.root.minsize(int(650 * self.scale), int(450 * self.scale))
+        self.root.minsize(700, 500)
 
-        # Force reasonable tk scaling (default can be too high on HiDPI)
-        self.root.tk.call('tk', 'scaling', 1.5)
-
-        base_font_size = max(14, int(14 * self.scale))
+        # Large font for HiDPI
+        base_font_size = 18
 
         default_font = tkfont.nametofont("TkDefaultFont")
         default_font.configure(size=base_font_size)
@@ -60,7 +59,7 @@ class MainWindow:
         style.configure(".", font=("", base_font_size))
         style.configure("TButton", font=("", base_font_size), padding=8)
         style.configure("TLabel", font=("", base_font_size))
-        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[12, 6])
+        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[14, 8])
         style.configure("TLabelframe.Label", font=("", base_font_size, "bold"))
         style.configure("TCombobox", font=("", base_font_size))
         style.configure("TSpinbox", font=("", base_font_size))
@@ -318,16 +317,6 @@ class MainWindow:
         self.status_var.set(t("status_running") if self.scheduler.is_running() else t("status_stopped"))
 
     # ---- helpers ----------------------------------------------------------
-
-    def _detect_scale(self) -> float:
-        """Detect display scaling factor from monitors."""
-        try:
-            monitors = get_monitors()
-            if monitors:
-                return monitors[0].scaling
-        except Exception:
-            pass
-        return 1.0
 
     def _refresh_monitors(self) -> None:
         try:
