@@ -40,10 +40,6 @@ class MainWindow:
         self.root = tk.Tk()
         self.root.title(t("app_title"))
 
-        # Force X11 backend for better Tkinter compatibility
-        import os
-        os.environ.pop('WAYLAND_DISPLAY', None)
-
         w, h = 900, 650
         self.root.geometry(f"{w}x{h}")
         self.root.minsize(700, 500)
