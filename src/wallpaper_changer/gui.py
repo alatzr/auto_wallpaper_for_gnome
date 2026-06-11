@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
 from typing import Optional
@@ -41,6 +42,22 @@ class MainWindow:
         self.root.geometry("750x550")
         self.root.minsize(600, 400)
 
+        # Fix DPI scaling - set larger default font
+        default_font = tk.font.nametofont("TkDefaultFont")
+        default_font.configure(size=12)
+        self.root.option_add("*Font", default_font)
+
+        # Configure ttk styles for larger text
+        style = ttk.Style()
+        style.configure(".", font=("", 12))
+        style.configure("TButton", font=("", 12), padding=6)
+        style.configure("TLabel", font=("", 12))
+        style.configure("TNotebook.Tab", font=("", 12), padding=[10, 4])
+        style.configure("TLabelframe.Label", font=("", 12, "bold"))
+        style.configure("TCombobox", font=("", 12))
+        style.configure("TSpinbox", font=("", 12))
+        style.configure("TEntry", font=("", 12))
+
         self._build_ui()
         self._refresh_monitors()
 
@@ -67,7 +84,7 @@ class MainWindow:
         frame_monitors = ttk.LabelFrame(tab, text=t("label_monitor"))
         frame_monitors.pack(fill=tk.X, padx=8, pady=(8, 4))
 
-        self.monitor_listbox = tk.Listbox(frame_monitors, height=4)
+        self.monitor_listbox = tk.Listbox(frame_monitors, height=4, font=("", 12))
         self.monitor_listbox.pack(fill=tk.X, padx=4, pady=4)
 
         # Buttons

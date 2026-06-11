@@ -6,12 +6,14 @@ command: wallpaper-changer-gui
 
 finish-args:
   - --share=ipc
-  - --socket=fallback-x11
+  - --socket=x11
   - --socket=wayland
   - --socket=session-bus
+  - --share=network
   - --talk-name=org.gnome.Mutter.DisplayConfig
   - --filesystem=xdg-pictures
   - --filesystem=home
+  - --filesystem=/tmp/.X11-unix
   - --filesystem=xdg-run/dconf
   - --filesystem=xdg-config/dconf:ro
   - --talk-name=ca.desrt.dconf
