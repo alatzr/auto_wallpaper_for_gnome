@@ -69,6 +69,23 @@ Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
 WantedBy=default.target
 EOF
 
+# Create icon theme index if needed
+if [ ! -f "$HOME/.local/share/icons/hicolor/index.theme" ]; then
+    mkdir -p "$HOME/.local/share/icons/hicolor"
+    cat > "$HOME/.local/share/icons/hicolor/index.theme" << 'THEME'
+[Icon Theme]
+Name=Hicolor
+Comment=Fallback icon theme
+Directories=scalable/apps
+
+[scalable/apps]
+Size=48
+Type=Scalable
+MinSize=16
+MaxSize=512
+THEME
+fi
+
 # Update desktop database
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
