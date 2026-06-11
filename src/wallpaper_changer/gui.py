@@ -19,6 +19,21 @@ from wallpaper_changer.wallpaper import (
     get_wallpaper, set_wallpaper, compose_multi_monitor_wallpaper,
 )
 
+# ── Color palette (GNOME-inspired) ──────────────────────────────────────────
+COLORS = {
+    "bg":           "#fafafa",
+    "bg_dark":      "#f0f0f0",
+    "surface":      "#ffffff",
+    "border":       "#d5d5d5",
+    "text":         "#2e3436",
+    "text_dim":     "#77767b",
+    "accent":       "#3584e4",
+    "accent_hover": "#2a73c9",
+    "success":      "#33d17a",
+    "danger":       "#e01b24",
+    "warning":      "#f5c211",
+}
+
 
 class MainWindow:
     """Main application window using Tkinter."""
@@ -39,89 +54,183 @@ class MainWindow:
 
         self.root = tk.Tk()
         self.root.title(t("app_title"))
+        self.root.configure(bg=COLORS["bg"])
+        self.root.geometry("900x650")
+        self.root.minsize(750, 520)
 
-        w, h = 900, 650
-        self.root.geometry(f"{w}x{h}")
-        self.root.minsize(700, 500)
-
-        # Large font for HiDPI
-        base_font_size = 18
-
-        default_font = tkfont.nametofont("TkDefaultFont")
-        default_font.configure(size=base_font_size)
-        self.root.option_add("*Font", default_font)
-
-        style = ttk.Style()
-        style.configure(".", font=("", base_font_size))
-        style.configure("TButton", font=("", base_font_size), padding=8)
-        style.configure("TLabel", font=("", base_font_size))
-        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[14, 8])
-        style.configure("TLabelframe.Label", font=("", base_font_size, "bold"))
-        style.configure("TCombobox", font=("", base_font_size))
-        style.configure("TSpinbox", font=("", base_font_size))
-        style.configure("TEntry", font=("", base_font_size))
-
+        self._setup_fonts()
+        self._setup_styles()
         self._build_ui()
         self._refresh_monitors()
 
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
-    # ---- layout -----------------------------------------------------------
+    # ── Font & style setup ──────────────────────────────────────────────────
+
+    def _setup_fonts(self) -> None:
+        sz = 13
+        self.font_normal = tkfont.Font(family="Sans", size=sz)
+        self.font_bold   = tkfont.Font(family="Sans", size=sz, weight="bold")
+        self.font_small  = tkfont.Font(family="Sans", size=sz - 2)
+        self.font_title  = tkfont.Font(family="Sans", size=sz + 1, weight="bold")
+        self.font_btn    = tkfont.Font(family="Sans", size=sz, weight="bold")
+
+    def _setup_styles(self) -> None:
+        s = ttk.Style()
+        s.theme_use("clam")
+
+        # ── General
+        s.configure(".", background=COLORS["bg"], foreground=COLORS["text"],
+                    font=self.font_normal, borderwidth=0)
+
+        # ── Notebook
+        s.configure("TNotebook", background=COLORS["bg"], borderwidth=0, padding=4)
+        s.configure("TNotebook.Tab",
+                    background=COLORS["bg_dark"], foreground=COLORS["text"],
+                    font=self.font_normal, padding=[16, 8], borderwidth=0)
+        s.map("TNotebook.Tab",
+              background=[("selected", COLORS["surface"])],
+              foreground=[("selected", COLORS["accent"])])
+
+        # ── Frames
+        s.configure("TFrame", background=COLORS["bg"])
+        s.configure("Card.TFrame", background=COLORS["surface"], relief="flat")
+
+        # ── Labels
+        s.configure("TLabel", background=COLORS["bg"], foreground=COLORS["text"],
+                    font=self.font_normal)
+        s.configure("Title.TLabel", font=self.font_title, foreground=COLORS["accent"])
+        s.configure("Dim.TLabel", foreground=COLORS["text_dim"], font=self.font_small)
+        s.configure("Card.TLabel", background=COLORS["surface"])
+
+        # ── LabelFrame
+        s.configure("TLabelframe", background=COLORS["surface"],
+                    borderwidth=1, relief="solid", bordercolor=COLORS["border"])
+        s.configure("TLabelframe.Label", background=COLORS["surface"],
+                    foreground=COLORS["accent"], font=self.font_bold, padding=[8, 0])
+
+        # ── Buttons
+        s.configure("TButton", font=self.font_btn, padding=[14, 8],
+                    background=COLORS["bg_dark"], foreground=COLORS["text"],
+                    borderwidth=1, relief="solid", bordercolor=COLORS["border"])
+        s.map("TButton",
+              background=[("active", COLORS["border"])],
+              bordercolor=[("active", COLORS["accent"])])
+
+        s.configure("Accent.TButton", background=COLORS["accent"],
+                    foreground="#ffffff", bordercolor=COLORS["accent"])
+        s.map("Accent.TButton",
+              background=[("active", COLORS["accent_hover"])],
+              bordercolor=[("active", COLORS["accent_hover"])])
+
+        s.configure("Danger.TButton", background=COLORS["danger"],
+                    foreground="#ffffff", bordercolor=COLORS["danger"])
+        s.map("Danger.TButton",
+              background=[("active", "#c0101a")],
+              bordercolor=[("active", "#c0101a")])
+
+        # ── Entry / Spinbox
+        s.configure("TEntry", font=self.font_normal, padding=6,
+                    borderwidth=1, relief="solid", bordercolor=COLORS["border"])
+        s.map("TEntry", bordercolor=[("focus", COLORS["accent"])])
+
+        s.configure("TSpinbox", font=self.font_normal, padding=6,
+                    borderwidth=1, relief="solid", bordercolor=COLORS["border"])
+        s.map("TSpinbox", bordercolor=[("focus", COLORS["accent"])])
+
+        # ── Combobox
+        s.configure("TCombobox", font=self.font_normal, padding=6,
+                    borderwidth=1, relief="solid", bordercolor=COLORS["border"])
+        s.map("TCombobox", bordercolor=[("focus", COLORS["accent"])])
+
+        # ── Checkbutton
+        s.configure("TCheckbutton", background=COLORS["bg"], font=self.font_normal)
+
+    # ── Layout ──────────────────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+        container = ttk.Frame(self.root)
+        container.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
+
+        self.notebook = ttk.Notebook(container)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
 
         self._build_preview_tab()
         self._build_sources_tab()
         self._build_timer_tab()
         self._build_settings_tab()
 
-    # ---- Tab 1: Preview ---------------------------------------------------
+    # ── Card helper ─────────────────────────────────────────────────────────
+
+    def _make_card(self, parent: ttk.Frame, title: str) -> ttk.LabelFrame:
+        """Create a styled card-like LabelFrame."""
+        card = ttk.LabelFrame(parent, text=f"  {title}  ", style="TLabelframe")
+        card.pack(fill=tk.X, padx=0, pady=(0, 12))
+        inner = ttk.Frame(card, style="Card.TFrame")
+        inner.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
+        return inner
+
+    # ── Tab 1: Preview ──────────────────────────────────────────────────────
 
     def _build_preview_tab(self) -> None:
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text=t("tab_preview"))
+        tab = ttk.Frame(self.notebook, padding=16)
+        self.notebook.add(tab, text=f"  {t('tab_preview')}  ")
 
-        # Monitor list
-        frame_monitors = ttk.LabelFrame(tab, text=t("label_monitor"))
-        frame_monitors.pack(fill=tk.X, padx=8, pady=(8, 4))
+        # Monitor info card
+        card = self._make_card(tab, t("label_monitor"))
+        self.monitor_listbox = tk.Listbox(
+            card, height=4, font=self.font_normal,
+            bg=COLORS["surface"], fg=COLORS["text"],
+            selectbackground=COLORS["accent"], selectforeground="#fff",
+            borderwidth=0, highlightthickness=1,
+            highlightbackground=COLORS["border"], highlightcolor=COLORS["accent"],
+            activestyle="none",
+        )
+        self.monitor_listbox.pack(fill=tk.X, pady=(0, 4))
 
-        self.monitor_listbox = tk.Listbox(frame_monitors, height=4, font=("", 12))
-        self.monitor_listbox.pack(fill=tk.X, padx=4, pady=4)
+        # Action buttons card
+        card2 = self._make_card(tab, t("label_wallpaper"))
 
-        # Buttons
-        frame_btns = ttk.Frame(tab)
-        frame_btns.pack(fill=tk.X, padx=8, pady=4)
+        btn_row = ttk.Frame(card2, style="Card.TFrame")
+        btn_row.pack(fill=tk.X)
 
-        self.btn_prev = ttk.Button(frame_btns, text=t("btn_previous"), command=self._apply_random)
-        self.btn_prev.pack(side=tk.LEFT, padx=4)
+        self.btn_prev = ttk.Button(btn_row, text=t("btn_previous"), command=self._apply_random)
+        self.btn_prev.pack(side=tk.LEFT, padx=(0, 8))
 
-        self.btn_random = ttk.Button(frame_btns, text=t("btn_random"), command=self._apply_random)
-        self.btn_random.pack(side=tk.LEFT, padx=4)
+        self.btn_random = ttk.Button(btn_row, text=t("btn_random"),
+                                     command=self._apply_random, style="Accent.TButton")
+        self.btn_random.pack(side=tk.LEFT, padx=(0, 8))
 
-        self.btn_next = ttk.Button(frame_btns, text=t("btn_next"), command=self._apply_random)
-        self.btn_next.pack(side=tk.LEFT, padx=4)
+        self.btn_next = ttk.Button(btn_row, text=t("btn_next"), command=self._apply_random)
+        self.btn_next.pack(side=tk.LEFT)
 
-        # Quit button
-        ttk.Button(frame_btns, text=t("tray_quit"), command=self._quit).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(btn_row, text=t("tray_quit"), command=self._quit,
+                   style="Danger.TButton").pack(side=tk.RIGHT)
 
-    # ---- Tab 2: Sources ---------------------------------------------------
+    # ── Tab 2: Sources ──────────────────────────────────────────────────────
 
     def _build_sources_tab(self) -> None:
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text=t("tab_sources"))
+        tab = ttk.Frame(self.notebook, padding=16)
+        self.notebook.add(tab, text=f"  {t('tab_sources')}  ")
 
-        self.source_frame = ttk.LabelFrame(tab, text=t("label_source_folder"))
-        self.source_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=(8, 4))
+        self.source_outer = ttk.Frame(tab)
+        self.source_outer.pack(fill=tk.BOTH, expand=True)
+
+        self.source_frame = ttk.LabelFrame(
+            self.source_outer, text=f"  {t('label_source_folder')}  ",
+            style="TLabelframe",
+        )
+        self.source_frame.pack(fill=tk.BOTH, expand=True)
 
         self.source_rows: list[dict] = []
 
-        frame_btns = ttk.Frame(tab)
-        frame_btns.pack(fill=tk.X, padx=8, pady=4)
+        btn_row = ttk.Frame(tab)
+        btn_row.pack(fill=tk.X, pady=(12, 0))
 
-        ttk.Button(frame_btns, text=t("btn_save"), command=self._save_sources).pack(side=tk.RIGHT, padx=4)
-        ttk.Button(frame_btns, text=t("btn_refresh"), command=self._refresh_monitors).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(btn_row, text=t("btn_refresh"),
+                   command=self._refresh_monitors).pack(side=tk.LEFT)
+        ttk.Button(btn_row, text=t("btn_save"),
+                   command=self._save_sources, style="Accent.TButton").pack(side=tk.RIGHT)
 
     def _rebuild_source_rows(self) -> None:
         for row in self.source_rows:
@@ -131,23 +240,29 @@ class MainWindow:
         folder_map = {mc.name: mc.source_folder for mc in self.config.monitors}
 
         for m in self.monitors:
-            frame = ttk.Frame(self.source_frame)
-            frame.pack(fill=tk.X, padx=4, pady=2)
+            frame = ttk.Frame(self.source_frame, style="Card.TFrame")
+            frame.pack(fill=tk.X, padx=8, pady=6)
 
-            primary = f" {t('monitor_primary')}" if m.is_primary else ""
-            lbl = ttk.Label(frame, text=f"{m.name} ({m.width}x{m.height}{primary}):", width=28)
-            lbl.pack(side=tk.LEFT)
+            primary = f"  {t('monitor_primary')}" if m.is_primary else ""
+            icon = "🖥" if m.is_primary else "🖵"
+
+            lbl = ttk.Label(frame, text=f"{icon}  {m.name}  {m.width}×{m.height}{primary}",
+                            style="Card.TLabel", font=self.font_bold)
+            lbl.pack(anchor=tk.W, pady=(0, 4))
+
+            entry_row = ttk.Frame(frame, style="Card.TFrame")
+            entry_row.pack(fill=tk.X)
 
             var = tk.StringVar(value=folder_map.get(m.name, ""))
-            entry = ttk.Entry(frame, textvariable=var)
-            entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=4)
+            entry = ttk.Entry(entry_row, textvariable=var, font=self.font_normal)
+            entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
 
             def browse(v=var):
                 path = filedialog.askdirectory()
                 if path:
                     v.set(path)
 
-            ttk.Button(frame, text=t("btn_browse"), command=browse).pack(side=tk.LEFT)
+            ttk.Button(entry_row, text=t("btn_browse"), command=browse).pack(side=tk.RIGHT)
 
             self.source_rows.append({"monitor": m, "var": var, "frame": frame})
 
@@ -166,58 +281,61 @@ class MainWindow:
         self.config.save()
         messagebox.showinfo("OK", t("msg_saved"))
 
-    # ---- Tab 3: Timer -----------------------------------------------------
+    # ── Tab 3: Timer ────────────────────────────────────────────────────────
 
     def _build_timer_tab(self) -> None:
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text=t("tab_timer"))
+        tab = ttk.Frame(self.notebook, padding=16)
+        self.notebook.add(tab, text=f"  {t('tab_timer')}  ")
 
-        # Interval
-        frame_interval = ttk.LabelFrame(tab, text=t("label_interval"))
-        frame_interval.pack(fill=tk.X, padx=8, pady=(8, 4))
+        # Interval card
+        card = self._make_card(tab, t("label_interval"))
 
-        row = ttk.Frame(frame_interval)
-        row.pack(fill=tk.X, padx=4, pady=4)
+        row = ttk.Frame(card, style="Card.TFrame")
+        row.pack(fill=tk.X, pady=(0, 8))
 
-        ttk.Label(row, text=t("label_change_every")).pack(side=tk.LEFT)
+        ttk.Label(row, text=t("label_change_every"), style="Card.TLabel").pack(side=tk.LEFT)
 
         self.interval_var = tk.IntVar(value=self.config.interval)
         spin = ttk.Spinbox(row, from_=10, to=86400, increment=10,
-                           textvariable=self.interval_var, width=8)
-        spin.pack(side=tk.LEFT, padx=8)
+                           textvariable=self.interval_var, width=8, font=self.font_normal)
+        spin.pack(side=tk.RIGHT)
 
         # Presets
-        frame_presets = ttk.Frame(frame_interval)
-        frame_presets.pack(fill=tk.X, padx=4, pady=(0, 4))
+        presets_row = ttk.Frame(card, style="Card.TFrame")
+        presets_row.pack(fill=tk.X)
 
         for label, secs in [("1 min", 60), ("5 min", 300), ("30 min", 1800), ("1 hour", 3600)]:
-            ttk.Button(frame_presets, text=label,
-                       command=lambda s=secs: self.interval_var.set(s)).pack(side=tk.LEFT, padx=4)
+            ttk.Button(presets_row, text=label,
+                       command=lambda s=secs: self.interval_var.set(s)).pack(side=tk.LEFT, padx=(0, 8))
 
-        # Scheduler
-        frame_sched = ttk.LabelFrame(tab, text=t("label_scheduler"))
-        frame_sched.pack(fill=tk.X, padx=8, pady=4)
+        # Scheduler card
+        card2 = self._make_card(tab, t("label_scheduler"))
 
-        row2 = ttk.Frame(frame_sched)
-        row2.pack(fill=tk.X, padx=4, pady=4)
+        status_row = ttk.Frame(card2, style="Card.TFrame")
+        status_row.pack(fill=tk.X, pady=(0, 8))
 
-        ttk.Label(row2, text=t("label_status")).pack(side=tk.LEFT)
+        ttk.Label(status_row, text=t("label_status"), style="Card.TLabel").pack(side=tk.LEFT)
+
         self.status_var = tk.StringVar(value=t("status_stopped"))
-        ttk.Label(row2, textvariable=self.status_var).pack(side=tk.LEFT, padx=8)
+        self.status_label = ttk.Label(status_row, textvariable=self.status_var,
+                                      style="Dim.TLabel")
+        self.status_label.pack(side=tk.LEFT, padx=8)
 
-        row3 = ttk.Frame(frame_sched)
-        row3.pack(fill=tk.X, padx=4, pady=(0, 4))
+        btn_row = ttk.Frame(card2, style="Card.TFrame")
+        btn_row.pack(fill=tk.X)
 
-        ttk.Button(row3, text=t("btn_start"), command=self._on_start).pack(side=tk.LEFT, padx=4)
-        ttk.Button(row3, text=t("btn_stop"), command=self._on_stop).pack(side=tk.LEFT, padx=4)
+        ttk.Button(btn_row, text=t("btn_start"),
+                   command=self._on_start, style="Accent.TButton").pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(btn_row, text=t("btn_stop"),
+                   command=self._on_stop, style="Danger.TButton").pack(side=tk.LEFT)
 
-        # Systemd
-        frame_svc = ttk.LabelFrame(tab, text=t("label_systemd"))
-        frame_svc.pack(fill=tk.X, padx=8, pady=4)
+        # Systemd card
+        card3 = self._make_card(tab, t("label_systemd"))
 
         self.svc_var = tk.BooleanVar(value=is_service_installed())
-        ttk.Checkbutton(frame_svc, text=t("label_install_service"),
-                        variable=self.svc_var, command=self._on_service_toggle).pack(padx=4, pady=4)
+        ttk.Checkbutton(card3, text=t("label_install_service"),
+                        variable=self.svc_var,
+                        command=self._on_service_toggle).pack(anchor=tk.W)
 
     def _on_start(self) -> None:
         interval = self.interval_var.get()
@@ -237,48 +355,48 @@ class MainWindow:
         else:
             uninstall_service()
 
-    # ---- Tab 4: Settings --------------------------------------------------
+    # ── Tab 4: Settings ─────────────────────────────────────────────────────
 
     def _build_settings_tab(self) -> None:
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text=t("tab_settings"))
+        tab = ttk.Frame(self.notebook, padding=16)
+        self.notebook.add(tab, text=f"  {t('tab_settings')}  ")
 
-        # Scaling option
-        frame_scaling = ttk.LabelFrame(tab, text=t("label_scaling"))
-        frame_scaling.pack(fill=tk.X, padx=8, pady=(8, 4))
+        # Scaling card
+        card = self._make_card(tab, t("label_scaling"))
 
-        row = ttk.Frame(frame_scaling)
-        row.pack(fill=tk.X, padx=4, pady=4)
+        row = ttk.Frame(card, style="Card.TFrame")
+        row.pack(fill=tk.X)
 
-        ttk.Label(row, text=t("label_scaling_option")).pack(side=tk.LEFT)
+        ttk.Label(row, text=t("label_scaling_option"), style="Card.TLabel").pack(side=tk.LEFT)
 
         option_labels = [t(f"option_{opt}") for opt in self.OPTIONS]
         self.option_var = tk.StringVar(value=t(f"option_{self.config.option}"))
         combo = ttk.Combobox(row, textvariable=self.option_var, values=option_labels,
-                             state="readonly", width=15)
-        combo.pack(side=tk.LEFT, padx=8)
+                             state="readonly", width=15, font=self.font_normal)
+        combo.pack(side=tk.RIGHT)
 
-        # Language
-        frame_lang = ttk.LabelFrame(tab, text=t("label_language"))
-        frame_lang.pack(fill=tk.X, padx=8, pady=4)
+        # Language card
+        card2 = self._make_card(tab, t("label_language"))
 
-        row2 = ttk.Frame(frame_lang)
-        row2.pack(fill=tk.X, padx=4, pady=4)
+        row2 = ttk.Frame(card2, style="Card.TFrame")
+        row2.pack(fill=tk.X)
 
-        ttk.Label(row2, text=t("label_language")).pack(side=tk.LEFT)
+        ttk.Label(row2, text=t("label_language"), style="Card.TLabel").pack(side=tk.LEFT)
 
         self.lang_var = tk.StringVar(value="English" if get_language() == "en" else "中文")
         lang_combo = ttk.Combobox(row2, textvariable=self.lang_var,
-                                  values=["English", "中文"], state="readonly", width=10)
-        lang_combo.pack(side=tk.LEFT, padx=8)
+                                  values=["English", "中文"], state="readonly",
+                                  width=10, font=self.font_normal)
+        lang_combo.pack(side=tk.RIGHT)
         lang_combo.bind("<<ComboboxSelected>>", self._on_language_changed)
 
-        # Apply / Reset
-        frame_btns = ttk.Frame(tab)
-        frame_btns.pack(fill=tk.X, padx=8, pady=8)
+        # Buttons
+        btn_row = ttk.Frame(tab)
+        btn_row.pack(fill=tk.X, pady=(12, 0))
 
-        ttk.Button(frame_btns, text=t("btn_apply"), command=self._on_apply).pack(side=tk.RIGHT, padx=4)
-        ttk.Button(frame_btns, text=t("btn_reset"), command=self._on_reset).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(btn_row, text=t("btn_reset"), command=self._on_reset).pack(side=tk.LEFT)
+        ttk.Button(btn_row, text=t("btn_apply"),
+                   command=self._on_apply, style="Accent.TButton").pack(side=tk.RIGHT)
 
     def _on_apply(self) -> None:
         label = self.option_var.get()
@@ -303,16 +421,16 @@ class MainWindow:
 
     def _reload_ui(self) -> None:
         self.root.title(t("app_title"))
-        self.notebook.tab(0, text=t("tab_preview"))
-        self.notebook.tab(1, text=t("tab_sources"))
-        self.notebook.tab(2, text=t("tab_timer"))
-        self.notebook.tab(3, text=t("tab_settings"))
+        self.notebook.tab(0, text=f"  {t('tab_preview')}  ")
+        self.notebook.tab(1, text=f"  {t('tab_sources')}  ")
+        self.notebook.tab(2, text=f"  {t('tab_timer')}  ")
+        self.notebook.tab(3, text=f"  {t('tab_settings')}  ")
         self.btn_prev.config(text=t("btn_previous"))
         self.btn_random.config(text=t("btn_random"))
         self.btn_next.config(text=t("btn_next"))
         self.status_var.set(t("status_running") if self.scheduler.is_running() else t("status_stopped"))
 
-    # ---- helpers ----------------------------------------------------------
+    # ── Helpers ─────────────────────────────────────────────────────────────
 
     def _refresh_monitors(self) -> None:
         try:
@@ -323,7 +441,7 @@ class MainWindow:
         self.monitor_listbox.delete(0, tk.END)
         for m in self.monitors:
             primary = f"  {t('monitor_primary')}" if m.is_primary else ""
-            self.monitor_listbox.insert(tk.END, f"{m.name}  {m.width}x{m.height}{primary}")
+            self.monitor_listbox.insert(tk.END, f"  {m.name}   {m.width}×{m.height}{primary}")
 
         self._rebuild_source_rows()
 
@@ -383,8 +501,6 @@ class MainWindow:
     def _on_close(self) -> None:
         """Hide window instead of closing."""
         self.root.withdraw()
-
-        # Show a notification-like window that can restore the main window
         self._show_minimized_indicator()
 
     def _show_minimized_indicator(self) -> None:
@@ -397,19 +513,21 @@ class MainWindow:
 
         indicator = tk.Toplevel(self.root)
         indicator.title("")
-        indicator.geometry("30x30+10+10")
+        indicator.geometry("36x36+12+12")
         indicator.overrideredirect(True)
         indicator.attributes("-topmost", True)
+        indicator.configure(bg=COLORS["accent"])
 
-        btn = tk.Button(indicator, text="WC", font=("", 10, "bold"),
-                        bg="#3584e4", fg="white", bd=0,
-                        command=lambda: self._restore_from_indicator(indicator))
+        btn = tk.Button(
+            indicator, text="WC", font=("Sans", 10, "bold"),
+            bg=COLORS["accent"], fg="#ffffff", bd=0, activebackground=COLORS["accent_hover"],
+            activeforeground="#ffffff", cursor="hand2",
+            command=lambda: self._restore_from_indicator(indicator),
+        )
         btn.pack(fill=tk.BOTH, expand=True)
-
         self._indicator = indicator
 
     def _restore_from_indicator(self, indicator: tk.Toplevel) -> None:
-        """Restore window from minimized indicator."""
         indicator.destroy()
         self._indicator = None
         self.root.deiconify()
@@ -426,7 +544,6 @@ class MainWindow:
         self.root.destroy()
 
     def run(self) -> None:
-        """Run the main loop."""
         self.root.mainloop()
 
 
