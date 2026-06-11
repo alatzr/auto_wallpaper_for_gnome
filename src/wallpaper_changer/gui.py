@@ -42,14 +42,15 @@ class MainWindow:
 
         # Detect display scaling factor for Wayland
         self.scale = self._detect_scale()
-        w = int(750 * self.scale)
-        h = int(550 * self.scale)
+        w = int(800 * self.scale)
+        h = int(600 * self.scale)
         self.root.geometry(f"{w}x{h}")
-        self.root.minsize(int(600 * self.scale), int(400 * self.scale))
+        self.root.minsize(int(650 * self.scale), int(450 * self.scale))
 
-        # Apply scaling to Tkinter
-        base_font_size = int(11 * self.scale)
-        self.root.tk.call('tk', 'scaling', self.scale * 1.0)
+        # Force reasonable tk scaling (default can be too high on HiDPI)
+        self.root.tk.call('tk', 'scaling', 1.5)
+
+        base_font_size = max(14, int(14 * self.scale))
 
         default_font = tkfont.nametofont("TkDefaultFont")
         default_font.configure(size=base_font_size)
@@ -57,9 +58,9 @@ class MainWindow:
 
         style = ttk.Style()
         style.configure(".", font=("", base_font_size))
-        style.configure("TButton", font=("", base_font_size), padding=int(6 * self.scale))
+        style.configure("TButton", font=("", base_font_size), padding=8)
         style.configure("TLabel", font=("", base_font_size))
-        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[int(10 * self.scale), int(4 * self.scale)])
+        style.configure("TNotebook.Tab", font=("", base_font_size), padding=[12, 6])
         style.configure("TLabelframe.Label", font=("", base_font_size, "bold"))
         style.configure("TCombobox", font=("", base_font_size))
         style.configure("TSpinbox", font=("", base_font_size))
